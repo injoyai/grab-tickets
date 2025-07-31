@@ -67,8 +67,8 @@ func Default(op ...Option) *Proxy {
 func New(port int, op ...Option) *Proxy {
 	p := &Proxy{
 		ProxyHttpServer: goproxy.NewProxyHttpServer(),
-		port:            port,
 		ca:              goproxy.GoproxyCa,
+		port:            port,
 	}
 	for _, v := range op {
 		v(p)
@@ -78,9 +78,9 @@ func New(port int, op ...Option) *Proxy {
 
 type Proxy struct {
 	*goproxy.ProxyHttpServer
+	ca    tls.Certificate
 	port  int
 	debug bool
-	ca    tls.Certificate
 }
 
 func (this *Proxy) Run(ctx context.Context) error {
