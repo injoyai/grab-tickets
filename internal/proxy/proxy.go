@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"github.com/elazarl/goproxy"
 	"github.com/injoyai/logs"
 	"golang.org/x/net/proxy"
@@ -56,15 +57,17 @@ func WithOptions(op ...Option) Option {
 
 func Default(op ...Option) *Proxy {
 	return New(
+		DefaultPort,
 		WithCABytes([]byte(DefaultCrt), []byte(DefaultKey)),
 		WithMitm(),
 		WithOptions(op...),
 	)
 }
 
-func New(op ...Option) *Proxy {
+func New(port int, op ...Option) *Proxy {
 	p := &Proxy{
 		ProxyHttpServer: goproxy.NewProxyHttpServer(),
+		port:            port,
 		ca:              goproxy.GoproxyCa,
 	}
 	for _, v := range op {
@@ -75,8 +78,13 @@ func New(op ...Option) *Proxy {
 
 type Proxy struct {
 	*goproxy.ProxyHttpServer
+	port  int
 	debug bool
 	ca    tls.Certificate
+}
+
+func (this *Proxy) Run(ctx context.Context) error {
+	return http.ListenAndServe(fmt.Sprintf(":%d", this.port), this.ProxyHttpServer)
 }
 
 func (this *Proxy) SetOptions(op ...Option) {

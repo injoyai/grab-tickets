@@ -1,6 +1,8 @@
 package proxy
 
 const (
+	DefaultPort = 8080
+
 	DefaultCrt = `-----BEGIN CERTIFICATE-----
 MIID1TCCAr2gAwIBAgIUcW1ydjlfBESEl2wtyVNTzsLR1AYwDQYJKoZIhvcNAQEL
 BQAwdDELMAkGA1UEBhMCQ04xEDAOBgNVBAgMB0JlaWppbmcxEDAOBgNVBAcMB0Jl
