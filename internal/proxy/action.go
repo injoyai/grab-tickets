@@ -65,7 +65,7 @@ func (this *ReqAction) SetBody(body []byte) *ReqAction {
 	})
 }
 
-func (this *ReqAction) Discard() *ReqAction {
+func (this *ReqAction) DoNothing() *ReqAction {
 	return this.Do(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		return req, nil
 	})
@@ -131,7 +131,7 @@ func (this *Action) Do(fs ...RespHandler) *Action {
 	return this
 }
 
-func (this *Action) Discard() *Action {
+func (this *Action) DoNothing() *Action {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		return resp
 	})

@@ -36,8 +36,8 @@ func main() {
 		func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response { return resp },
 	)
 
-	s.OnRequest(proxy.HostIs("www.baidu.com")).Discard()
-	s.OnResponse(proxy.HostIs("www.baidu.com")).Discard()
+	s.OnRequest(proxy.HostIs("www.baidu.com")).DoNothing()
+	s.OnResponse(proxy.HostIs("www.baidu.com")).DoNothing()
 
 	s.OnResponse(
 		proxy.HostIs("www.trae.ai"),
