@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统安全警告</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            width: 80%;
+            max-width: 600px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .warning-header {
+            background-color: #ff4d4d;
+            color: white;
+            padding: 15px;
+            margin: -30px -30px 20px -30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .warning-icon {
+            font-size: 2.5rem;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .content {
+            margin-bottom: 20px;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            transition: width 0.5s;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .btn-secondary {
+            background-color: #f44336;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #d32f2f;
+            transform: scale(1.05);
+        }
+        .hidden {
+            display: none;
+        }
+        .blink {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .virus-animation {
+            position: absolute;
+            font-size: 24px;
+            color: red;
+            animation: float 5s infinite linear;
+            opacity: 0;
+        }
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            text-align: center;
+            max-width: 80%;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        .close-btn:hover {
+            color: #000;
+        }
+        .emoji {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="warning-header">
+            <div class="warning-icon">⚠️</div>
+            <h1>系统安全警告</h1>
+        </div>
+        
+        <div class="content">
+            <p><strong class="blink">警告：</strong>检测到您的系统已被<strong>多个高危病毒感染</strong>！</p>
+            <p>系统扫描发现以下问题：</p>
+            <ul>
+                <li>检测到<strong>特洛伊木马</strong>正在窃取您的个人信息</li>
+                <li>发现<strong>勒索软件</strong>正在加密您的重要文件</li>
+                <li>您的<strong>网络连接</strong>已被恶意软件劫持</li>
+                <li>您的<strong>摄像头和麦克风</strong>可能已被远程控制</li>
+            </ul>
+            <p>我们正在尝试修复您的系统，请勿关闭此窗口！</p>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        
+        <div id="initialButtons" class="buttons">
+            <button class="btn btn-primary" id="scanButton">立即修复</button>
+            <button class="btn btn-secondary" id="ignoreButton">忽略风险</button>
+        </div>
+        
+        <div id="afterScanButtons" class="buttons hidden">
+            <button class="btn btn-primary" id="fixButton">一键修复所有问题</button>
+            <button class="btn btn-secondary" id="laterButton">稍后修复</button>
+        </div>
+    </div>
+    
+    <div id="popup" class="popup hidden">
+        <span class="close-btn" id="closePopup">×</span>
+        <div class="emoji">😂</div>
+        <h2>恶搞成功！</h2>
+        <p>别担心，这只是一个恶搞页面，您的系统完全安全。</p>
+        <p>没有病毒，没有威胁，只有一个小小的玩笑！</p>
+        <button class="btn btn-primary" id="okButton">我明白了</button>
+    </div>
+    
+    <div id="overlay" class="overlay hidden"></div>
+    
+    <script>
+        // 病毒图标动画
+        function createVirusIcon() {
+            const icons = ['🦠', '⚠️', '💀', '🔒', '🛑', '⛔', '🚫'];
+            const icon = document.createElement('div');
+            icon.className = 'virus-animation';
+            icon.textContent = icons[Math.floor(Math.random() * icons.length)];
+            
+            // 随机位置和方向
+            const x = Math.random() * 300 - 150;
+            const y = Math.random() * 300 - 150;
+            icon.style.setProperty('--x', `${x}px`);
+            icon.style.setProperty('--y', `${y}px`);
+            
+            document.querySelector('.container').appendChild(icon);
+            
+            // 动画结束后移除
+            setTimeout(() => {
+                icon.remove();
+            }, 5000);
+        }
+        
+        // 进度条动画
+        function startProgress() {
+            const progressBar = document.getElementById('progressBar');
+            let width = 0;
+            
+            // 隐藏初始按钮
+            document.getElementById('initialButtons').classList.add('hidden');
+            
+            // 显示进度条
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('afterScanButtons').classList.remove('hidden');
+                } else {
+                    width++;
+                    progressBar.style.width = width + '%';
+                    progressBar.textContent = width + '%';
+                    
+                    // 随机添加病毒图标
+                    if (Math.random() < 0.1) {
+                        createVirusIcon();
+                    }
+                }
+            }, 50);
+        }
+        
+        // 显示恶搞弹窗
+        function showPrank() {
+            document.getElementById('popup').classList.remove('hidden');
+            document.getElementById('overlay').classList.remove('hidden');
+        }
+        
+        // 事件监听
+        document.getElementById('scanButton').addEventListener('click', startProgress);
+        document.getElementById('fixButton').addEventListener('click', showPrank);
+        document.getElementById('ignoreButton').addEventListener('click', showPrank);
+        document.getElementById('laterButton').addEventListener('click', showPrank);
+        
+        document.getElementById('closePopup').addEventListener('click', () => {
+            document.getElementById('popup').classList.add('hidden');
+            document.getElementById('overlay').classList.add('hidden');
+        });
+        
+        document.getElementById('okButton').addEventListener('click', () => {
+            document.getElementById('popup').classList.add('hidden');
+            document.getElementById('overlay').classList.add('hidden');
+        });
+        
+        // 随机添加一些病毒图标
+        setInterval(createVirusIcon, 2000);
+    </script>
+</body>
+</html>
