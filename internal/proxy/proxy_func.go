@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func ReqHostIs(host ...string) goproxy.ReqCondition {
+func HostIs(host ...string) Condition {
 	return goproxy.ReqConditionFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		for _, h := range host {
 			if req.Host == h {
@@ -19,10 +19,13 @@ func ReqHostIs(host ...string) goproxy.ReqCondition {
 	})
 }
 
-func RespHostIs(host ...string) goproxy.RespCondition {
-	return goproxy.RespConditionFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) bool {
-		for _, h := range host {
-			if resp.Request.Host == h {
+func PathIs(path ...string) Condition {
+	return goproxy.ReqConditionFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
+		if req == nil {
+			return false
+		}
+		for _, p := range path {
+			if req.URL.Path == p {
 				return true
 			}
 		}
@@ -84,13 +87,13 @@ func NewResponse(r *http.Request, status int, body string, contentType string) *
 }
 
 func NewTextResponse(r *http.Request, text string) *http.Response {
-	return NewResponse(r, http.StatusAccepted, text, "text/plain")
+	return NewResponse(r, http.StatusAccepted, text, "text/plain;charset=UTF-8")
 }
 
 func NewHtmlResponse(r *http.Request, text string) *http.Response {
-	return NewResponse(r, http.StatusAccepted, text, "text/html")
+	return NewResponse(r, http.StatusAccepted, text, "text/html;charset=UTF-8")
 }
 
 func NewJsonResponse(r *http.Request, text string) *http.Response {
-	return NewResponse(r, http.StatusAccepted, text, "application/json")
+	return NewResponse(r, http.StatusAccepted, text, "application/json;charset=UTF-8")
 }
