@@ -1,13 +1,16 @@
 package proxy
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/elazarl/goproxy"
 	"github.com/fatih/color"
 	"github.com/injoyai/logs"
 	"golang.org/x/net/proxy"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -105,7 +108,7 @@ func (this *Proxy) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	this.log.Printf("[%s] 代理开启成功...\n", srv.Addr)
+	this.log.Printf("[信息] [%s] 代理开启成功...\n", srv.Addr)
 	c := make(chan struct{})
 	defer close(c)
 	go func() {
@@ -190,10 +193,87 @@ func (this *Proxy) OnRequestHost(host ...string) *goproxy.ReqProxyConds {
 	return this.OnRequest(ReqHostIs(host...))
 }
 
-func (this *Proxy) OnResponseHost(host ...string) *goproxy.ProxyConds {
+func (this *Proxy) OnResponse(c ...goproxy.RespCondition) *Action {
+	return &Action{
+		ProxyConds: this.ProxyHttpServer.OnResponse(c...),
+		log:        this.log,
+	}
+}
+
+func (this *Proxy) OnResponseHost(host ...string) *Action {
 	return this.OnResponse(RespHostIs(host...))
 }
 
 func (this *Proxy) OnResponseHostReplace(host []string, old, new string) {
-	this.OnResponse(RespHostIs(host...)).DoFunc(RespReplaceBodyFunc(old, new))
+	this.OnResponse(RespHostIs(host...)).ReplaceBody(old, new)
+}
+
+type Condition = goproxy.ReqCondition
+
+type Action struct {
+	*goproxy.ProxyConds
+	log *logs.Entity
+}
+
+func (this *Action) ReplaceBody(old, new string) {
+	this.DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+		resp2, err := RespReplaceBody(resp, old, new)
+		if err != nil {
+			this.log.Printf("[错误] %v\n", err)
+			return resp
+		}
+		return resp2
+	})
+}
+
+/*
+Document 解析body
+使用方法参考
+https://blog.csdn.net/qq_38334677/article/details/129225231
+
+	doc, err := r.Document()
+	if err!=nil{
+		return
+	}
+	//查找标签: 		doc.Find("body,div,...") 多个用,隔开
+	//查找ID: 		doc.Find("#id1")
+	//查找class: 	doc.Find(".class1")
+	//查找属性: 		doc.Find("div[lang]") doc.Find("div[lang=zh]") doc.Find("div[id][lang=zh]")
+	//查找子节点: 	doc.Find("body>div")
+	//过滤数据: 		doc.Find("div:contains(xxx)")
+	//过滤节点: 		dom.Find("span:has(div)")
+	doc.Find("body").Each(func(i int, selection *goquery.Selection) {
+		fmt.Println(selection.Text())
+	})
+
+选择器					说明
+Find(“div[lang]”)		筛选含有lang属性的div元素
+Find(“div[lang=zh]”)	筛选lang属性为zh的div元素
+Find(“div[lang!=zh]”)	筛选lang属性不等于zh的div元素
+Find(“div[lang¦=zh]”)	筛选lang属性为zh或者zh-开头的div元素
+Find(“div[lang*=zh]”)	筛选lang属性包含zh这个字符串的div元素
+Find(“div[lang~=zh]”)	筛选lang属性包含zh这个单词的div元素，单词以空格分开的
+Find(“div[lang$=zh]”)	筛选lang属性以zh结尾的div元素，区分大小写
+Find(“div[lang^=zh]”)	筛选lang属性以zh开头的div元素，区分大小写
+*/
+func (this *Action) Document(f func(resp *http.Response, ctx *goproxy.ProxyCtx, doc *goquery.Document)) {
+	this.ProxyConds.DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+		if f == nil {
+			return resp
+		}
+		bs, err := io.ReadAll(resp.Body)
+		if err != nil {
+			this.log.Printf("[错误] %v\n", err)
+			return resp
+		}
+		resp.Body = io.NopCloser(bytes.NewReader(bs))
+		doc, err := goquery.NewDocumentFromReader(bytes.NewReader(bs))
+		if err != nil {
+			this.log.Printf("[错误] %v\n", err)
+			return resp
+		}
+		f(resp, ctx, doc)
+		return resp
+	})
+	return
 }

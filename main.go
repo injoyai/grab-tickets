@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/elazarl/goproxy"
 	"github.com/injoyai/grab-tickets/internal/proxy"
-	"net/http"
 )
 
 func main() {
@@ -27,12 +25,4 @@ func main() {
 
 	s.Run(context.Background())
 
-}
-
-func RespReplaceByHost(s *proxy.Proxy, host string, old, new string) {
-	s.OnResponse(proxy.RespHostIs(host)).
-		DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
-			resp, _ = proxy.RespReplaceBody(resp, old, new)
-			return resp
-		})
 }

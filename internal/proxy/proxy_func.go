@@ -54,14 +54,6 @@ func RespReplaceBody(resp *http.Response, old, new string) (*http.Response, erro
 	return resp, nil
 }
 
-// RespReplaceBodyFunc 返回替换响应体内容的函数
-func RespReplaceBodyFunc(old, new string) func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
-	return func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
-		resp, _ = RespReplaceBody(resp, old, new)
-		return resp
-	}
-}
-
 /*
 
 1.2 常见的媒体格式
