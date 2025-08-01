@@ -114,12 +114,12 @@ func (this *ReqAction) ResponseGif(body []byte) *ReqAction {
 
  */
 
-type Action struct {
+type RespAction struct {
 	*goproxy.ProxyConds
 	log *logs.Entity
 }
 
-func (this *Action) Do(fs ...RespHandler) *Action {
+func (this *RespAction) Do(fs ...RespHandler) *RespAction {
 	for _, f := range fs {
 		this.ProxyConds.DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 			if resp == nil || f == nil {
@@ -131,13 +131,13 @@ func (this *Action) Do(fs ...RespHandler) *Action {
 	return this
 }
 
-func (this *Action) DoNothing() *Action {
+func (this *RespAction) DoNothing() *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		return resp
 	})
 }
 
-func (this *Action) OnURL(f func(u *url.URL)) *Action {
+func (this *RespAction) OnURL(f func(u *url.URL)) *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		if f == nil || resp.Request == nil || resp.Request.URL == nil {
 			return resp
@@ -147,7 +147,7 @@ func (this *Action) OnURL(f func(u *url.URL)) *Action {
 	})
 }
 
-func (this *Action) OnQuery(f func(q url.Values)) *Action {
+func (this *RespAction) OnQuery(f func(q url.Values)) *RespAction {
 	return this.OnURL(func(u *url.URL) {
 		if f != nil {
 			f(u.Query())
@@ -155,7 +155,7 @@ func (this *Action) OnQuery(f func(q url.Values)) *Action {
 	})
 }
 
-func (this *Action) PrintRequest(body ...bool) *Action {
+func (this *RespAction) PrintRequest(body ...bool) *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		bs, err := httputil.DumpRequest(resp.Request, len(body) > 0 && body[0])
 		if err != nil {
@@ -168,7 +168,7 @@ func (this *Action) PrintRequest(body ...bool) *Action {
 	})
 }
 
-func (this *Action) PrintResponse(body ...bool) *Action {
+func (this *RespAction) PrintResponse(body ...bool) *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		bs, err := httputil.DumpResponse(resp, len(body) > 0 && body[0])
 		if err != nil {
@@ -180,7 +180,7 @@ func (this *Action) PrintResponse(body ...bool) *Action {
 	})
 }
 
-func (this *Action) Print(body ...bool) *Action {
+func (this *RespAction) Print(body ...bool) *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		reqBs, err := httputil.DumpRequest(resp.Request, len(body) > 0 && body[0])
 		if err != nil {
@@ -200,7 +200,7 @@ func (this *Action) Print(body ...bool) *Action {
 	})
 }
 
-func (this *Action) ReplaceBody(old, new string) *Action {
+func (this *RespAction) ReplaceBody(old, new string) *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		resp2, err := RespReplaceBody(resp, old, new)
 		if err != nil {
@@ -237,7 +237,7 @@ Find(“div[lang~=zh]”)	筛选lang属性包含zh这个单词的div元素，单
 Find(“div[lang$=zh]”)	筛选lang属性以zh结尾的div元素，区分大小写
 Find(“div[lang^=zh]”)	筛选lang属性以zh开头的div元素，区分大小写
 */
-func (this *Action) Document(f func(resp *http.Response, ctx *goproxy.ProxyCtx, doc *goquery.Document)) *Action {
+func (this *RespAction) Document(f func(resp *http.Response, ctx *goproxy.ProxyCtx, doc *goquery.Document)) *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		if f == nil {
 			return resp

@@ -203,8 +203,8 @@ func (this *Proxy) OnRequest(c ...Condition) *ReqAction {
 }
 
 // OnResponse 响应事件,Do完之后生效
-func (this *Proxy) OnResponse(c ...Condition) *Action {
-	return &Action{
+func (this *Proxy) OnResponse(c ...Condition) *RespAction {
+	return &RespAction{
 		ProxyConds: this.ProxyHttpServer.OnResponse(c...),
 		log:        this.log,
 	}
