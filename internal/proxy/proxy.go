@@ -65,7 +65,7 @@ func WithPort(port int) Option {
 func Default(op ...Option) *Proxy {
 	return New(
 		WithPort(DefaultPort),
-		WithCABytes([]byte(DefaultCrt), []byte(DefaultKey)),
+		WithCABytes([]byte(DefaultCrt), []byte(DefaultKey)), //100年的证书
 		WithMitm(),
 		WithOptions(op...),
 	)

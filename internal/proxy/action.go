@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 )
 
 type ReqAction struct {
@@ -79,6 +80,31 @@ func (this *ReqAction) Response(resp *http.Response) *ReqAction {
 func (this *ReqAction) ResponseHtml(body string) *ReqAction {
 	return this.Do(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		return req, NewHtmlResponse(req, body)
+	})
+}
+
+func (this *ReqAction) ResponseHtmlFile(filename string) *ReqAction {
+	return this.Do(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		bs, _ := os.ReadFile(filename)
+		return req, NewHtmlResponse(req, string(bs))
+	})
+}
+
+func (this *ReqAction) ResponsePng(body []byte) *ReqAction {
+	return this.Do(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		return req, NewPngResponse(req, body)
+	})
+}
+
+func (this *ReqAction) ResponseJpg(body []byte) *ReqAction {
+	return this.Do(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		return req, NewJpgResponse(req, body)
+	})
+}
+
+func (this *ReqAction) ResponseGif(body []byte) *ReqAction {
+	return this.Do(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+		return req, NewGifResponse(req, body)
 	})
 }
 

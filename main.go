@@ -42,7 +42,7 @@ func main() {
 	s.OnResponse(
 		proxy.HostIs("www.trae.ai"),
 		//proxy.PathIs("/cloudide/api/v3/trae/CheckLogin"),
-	).ReplaceBody("Login Successful", "Login Failed")
+	).ReplaceBody("Login Successful", "Login Failed...")
 
 	s.OnResponse(
 		proxy.HostIs("www.baidu.com"),
@@ -50,7 +50,7 @@ func main() {
 
 	s.OnRequest(
 		proxy.HostIs("www.baidu.com"),
-	).ResponseHtml("禁止访问...")
+	).ResponseHtmlFile("./prank.html")
 
 	s.OnResponse(
 		proxy.HostIs("drive-m.quark.cn"),

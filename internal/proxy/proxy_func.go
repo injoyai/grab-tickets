@@ -64,7 +64,7 @@ text/html：HTML格式
 text/plain：纯文本格式
 text/XML：XML格式
 image/gif：gif图片格式
-image/jped：jpg图片格式
+image/jpeg：jpg图片格式
 image/png：png图片格式
 以application开头的媒体格式类型：
 
@@ -96,4 +96,16 @@ func NewHtmlResponse(r *http.Request, text string) *http.Response {
 
 func NewJsonResponse(r *http.Request, text string) *http.Response {
 	return NewResponse(r, http.StatusAccepted, text, "application/json;charset=UTF-8")
+}
+
+func NewPngResponse(r *http.Request, text []byte) *http.Response {
+	return NewResponse(r, http.StatusAccepted, string(text), "image/png")
+}
+
+func NewJpgResponse(r *http.Request, text []byte) *http.Response {
+	return NewResponse(r, http.StatusAccepted, string(text), "image/jpeg")
+}
+
+func NewGifResponse(r *http.Request, text []byte) *http.Response {
+	return NewResponse(r, http.StatusAccepted, string(text), "image/gif")
 }
