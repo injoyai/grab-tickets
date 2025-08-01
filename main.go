@@ -2,14 +2,14 @@ package main
 
 import (
 	"context"
-	"github.com/elazarl/goproxy"
 	"github.com/injoyai/grab-tickets/internal/proxy"
 	"github.com/injoyai/logs"
-	"net/http"
+	"io"
+	"log"
 	"net/url"
 )
 
-func main() {
+/*
 
 	//1. 设置任务
 
@@ -23,24 +23,24 @@ func main() {
 
 	//6. 报告任务结果
 
+*/
+
+func main() {
+
 	s := proxy.Default(
 		proxy.WithPort(8888),
 		proxy.WithProxy("http://127.0.0.1:1081"),
 	)
 
+	log.SetOutput(io.Discard)
 	//s.Verbose = true
-
-	s.OnResponse(
-		proxy.HostIs("www.baidu.com"),
-	).Do(
-		func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response { return resp },
-	)
 
 	s.OnRequest(proxy.HostIs("www.baidu.com")).DoNothing()
 	s.OnResponse(proxy.HostIs("www.baidu.com")).DoNothing()
 
 	s.OnResponse(
-		proxy.HostIs("www.trae.ai"),
+		proxy.HostLike("(.*?)\\.baidu\\.com"),
+		//proxy.HostIs("www.trae.ai"),
 		//proxy.PathIs("/cloudide/api/v3/trae/CheckLogin"),
 	).ReplaceBody("Login Successful", "Login Failed...")
 

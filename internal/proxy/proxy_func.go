@@ -5,8 +5,20 @@ import (
 	"github.com/elazarl/goproxy"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 )
+
+func HostLike(reg ...string) Condition {
+	return goproxy.ReqConditionFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
+		for _, r := range reg {
+			if regexp.MustCompile(r).MatchString(req.Host) {
+				return true
+			}
+		}
+		return false
+	})
+}
 
 func HostIs(host ...string) Condition {
 	return goproxy.ReqConditionFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
