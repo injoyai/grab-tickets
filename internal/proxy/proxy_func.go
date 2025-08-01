@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/elazarl/goproxy"
 	"io"
@@ -9,18 +8,30 @@ import (
 	"strings"
 )
 
-// SetCA 设置ca证书
-func SetCA(certFile, keyFile string) error {
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return err
-	}
-	goproxy.GoproxyCa = cert
-	return nil
+func ReqHostIs(host ...string) goproxy.ReqCondition {
+	return goproxy.ReqConditionFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
+		for _, h := range host {
+			if req.Host == h {
+				return true
+			}
+		}
+		return false
+	})
 }
 
-// ReplaceResponseBody 替换响应体内容
-func ReplaceResponseBody(resp *http.Response, old, new string) (*http.Response, error) {
+func RespHostIs(host ...string) goproxy.RespCondition {
+	return goproxy.RespConditionFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) bool {
+		for _, h := range host {
+			if resp.Request.Host == h {
+				return true
+			}
+		}
+		return false
+	})
+}
+
+// RespReplaceBody 替换响应体内容
+func RespReplaceBody(resp *http.Response, old, new string) (*http.Response, error) {
 	if resp == nil || resp.Body == nil {
 		return resp, nil
 	}
@@ -41,6 +52,14 @@ func ReplaceResponseBody(resp *http.Response, old, new string) (*http.Response, 
 	resp.Header.Set("Content-Length", fmt.Sprintf("%d", len(modified)))
 
 	return resp, nil
+}
+
+// RespReplaceBodyFunc 返回替换响应体内容的函数
+func RespReplaceBodyFunc(old, new string) func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+	return func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+		resp, _ = RespReplaceBody(resp, old, new)
+		return resp
+	}
 }
 
 /*

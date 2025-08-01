@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/elazarl/goproxy"
+	"github.com/fatih/color"
 	"github.com/injoyai/logs"
 	"golang.org/x/net/proxy"
 	"net"
@@ -55,20 +56,27 @@ func WithOptions(op ...Option) Option {
 	}
 }
 
+func WithPort(port int) Option {
+	return func(p *Proxy) {
+		p.SetPort(port)
+	}
+}
+
 func Default(op ...Option) *Proxy {
 	return New(
-		DefaultPort,
+		WithPort(DefaultPort),
 		WithCABytes([]byte(DefaultCrt), []byte(DefaultKey)),
 		WithMitm(),
 		WithOptions(op...),
 	)
 }
 
-func New(port int, op ...Option) *Proxy {
+func New(op ...Option) *Proxy {
 	p := &Proxy{
 		ProxyHttpServer: goproxy.NewProxyHttpServer(),
+		log:             logs.New("").SetFormatter(logs.TimeFormatter).SetColor(color.FgGreen),
 		ca:              goproxy.GoproxyCa,
-		port:            port,
+		port:            DefaultPort,
 	}
 	for _, v := range op {
 		v(p)
@@ -78,15 +86,39 @@ func New(port int, op ...Option) *Proxy {
 
 type Proxy struct {
 	*goproxy.ProxyHttpServer
+	log   *logs.Entity
 	ca    tls.Certificate
 	port  int
 	debug bool
 }
 
-func (this *Proxy) Run(ctx context.Context) error {
-	return http.ListenAndServe(fmt.Sprintf(":%d", this.port), this.ProxyHttpServer)
+func (this *Proxy) SetPort(port int) {
+	this.port = port
 }
 
+func (this *Proxy) Run(ctx context.Context) error {
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", this.port),
+		Handler: this.ProxyHttpServer,
+	}
+	ln, err := net.Listen("tcp", srv.Addr)
+	if err != nil {
+		return err
+	}
+	this.log.Printf("[%s] 代理开启成功...\n", srv.Addr)
+	c := make(chan struct{})
+	defer close(c)
+	go func() {
+		select {
+		case <-ctx.Done():
+		case <-c:
+		}
+		ln.Close()
+	}()
+	return srv.Serve(ln)
+}
+
+// SetOptions 设置选项
 func (this *Proxy) SetOptions(op ...Option) {
 	for _, v := range op {
 		v(this)
@@ -152,4 +184,16 @@ func (this *Proxy) Debug(b ...bool) {
 // Dial 实现接口
 func (this *Proxy) Dial(network, addr string) (c net.Conn, err error) {
 	return this.ProxyHttpServer.ConnectDial(network, addr)
+}
+
+func (this *Proxy) OnRequestHost(host ...string) *goproxy.ReqProxyConds {
+	return this.OnRequest(ReqHostIs(host...))
+}
+
+func (this *Proxy) OnResponseHost(host ...string) *goproxy.ProxyConds {
+	return this.OnResponse(RespHostIs(host...))
+}
+
+func (this *Proxy) OnResponseHostReplace(host []string, old, new string) {
+	this.OnResponse(RespHostIs(host...)).DoFunc(RespReplaceBodyFunc(old, new))
 }

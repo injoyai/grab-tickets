@@ -1,5 +1,12 @@
 package main
 
+import (
+	"context"
+	"github.com/elazarl/goproxy"
+	"github.com/injoyai/grab-tickets/internal/proxy"
+	"net/http"
+)
+
 func main() {
 
 	//1. 设置任务
@@ -14,4 +21,18 @@ func main() {
 
 	//6. 报告任务结果
 
+	s := proxy.Default(proxy.WithProxy("http://127.0.0.1:1081"))
+
+	s.OnResponseHostReplace([]string{"www.baidu.com"}, "全球领先", "全球不领先")
+
+	s.Run(context.Background())
+
+}
+
+func RespReplaceByHost(s *proxy.Proxy, host string, old, new string) {
+	s.OnResponse(proxy.RespHostIs(host)).
+		DoFunc(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+			resp, _ = proxy.RespReplaceBody(resp, old, new)
+			return resp
+		})
 }
