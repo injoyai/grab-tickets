@@ -159,6 +159,13 @@ func (this *RespAction) OnQuery(f func(q url.Values)) *RespAction {
 	})
 }
 
+func (this *RespAction) PrintHost() *RespAction {
+	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
+		fmt.Println(resp.Request.Host)
+		return resp
+	})
+}
+
 func (this *RespAction) PrintRequest(body ...bool) *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 		bs, err := httputil.DumpRequest(resp.Request, len(body) > 0 && body[0])

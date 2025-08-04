@@ -18,7 +18,7 @@ func main() {
 
 	s.OnResponse(
 		//proxy.HostLike("(.*)\\.damai\\.cn"),
-	).DoNothing() //.Print()
+	).PrintHost() //.Print()
 
 	s.Run(context.Background())
 
