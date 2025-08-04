@@ -1,13 +1,22 @@
 package proxy
 
 import (
-	"fmt"
 	"github.com/elazarl/goproxy"
-	"io"
 	"net/http"
 	"regexp"
 	"strings"
 )
+
+func DomainIs(domain ...string) Condition {
+	return goproxy.ReqConditionFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
+		for _, d := range domain {
+			if strings.HasSuffix(req.Host, "."+d) {
+				return true
+			}
+		}
+		return false
+	})
+}
 
 func HostLike(reg ...string) Condition {
 	return goproxy.ReqConditionFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
@@ -43,30 +52,6 @@ func PathIs(path ...string) Condition {
 		}
 		return false
 	})
-}
-
-// RespReplaceBody 替换响应体内容
-func RespReplaceBody(resp *http.Response, old, new string) (*http.Response, error) {
-	if resp == nil || resp.Body == nil {
-		return resp, nil
-	}
-
-	// 读取原始响应体
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	resp.Body.Close()
-
-	// 替换内容
-	modified := strings.ReplaceAll(string(bodyBytes), old, new)
-
-	// 设置新的响应体
-	resp.Body = io.NopCloser(strings.NewReader(modified))
-	resp.ContentLength = int64(len(modified))
-	resp.Header.Set("Content-Length", fmt.Sprintf("%d", len(modified)))
-
-	return resp, nil
 }
 
 /*

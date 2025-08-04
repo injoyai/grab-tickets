@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type Option func(*Proxy)
@@ -32,6 +33,13 @@ func WithCABytes(certFile, keyFile []byte) Option {
 func WithProxy(u string) Option {
 	return func(p *Proxy) {
 		err := p.SetProxy(u)
+		logs.PrintErr(err)
+	}
+}
+
+func WithProxyPac(u string, domains []string) Option {
+	return func(p *Proxy) {
+		err := p.SetProxyPac(u, domains)
 		logs.PrintErr(err)
 	}
 }
@@ -171,6 +179,59 @@ func (this *Proxy) SetProxy(u string) error {
 		}
 	default: //"http", "https"
 		t.Proxy = http.ProxyURL(proxyUrl)
+	}
+	this.ProxyHttpServer.Tr = t
+	return nil
+}
+
+func (this *Proxy) SetProxyPac(u string, domains []string) error {
+	if len(u) == 0 {
+		this.ProxyHttpServer.Tr = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			Proxy:           http.ProxyFromEnvironment,
+		}
+		return nil
+	}
+
+	m := map[string]struct{}{}
+	for _, v := range domains {
+		m[v] = struct{}{}
+	}
+
+	f := func(host string) bool {
+		ls := strings.Split(host, ".")
+		if len(ls) >= 2 {
+			_, ok := m[ls[len(ls)-2]+"."+ls[len(ls)-1]]
+			return ok
+		}
+		return false
+	}
+
+	proxyUrl, err := url.Parse(u)
+	if err != nil {
+		return err
+	}
+	t := &http.Transport{}
+	switch proxyUrl.Scheme {
+	case "socks5", "socks5h":
+		dialer, err := proxy.FromURL(proxyUrl, this)
+		if err != nil {
+			return err
+		}
+		t.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			if f(addr) {
+				return dialer.Dial(network, addr)
+			}
+			return this.Dial(network, addr)
+		}
+	default: //"http", "https"
+		//t.Proxy = http.ProxyURL(proxyUrl)
+		t.Proxy = func(req *http.Request) (*url.URL, error) {
+			if f(req.Host) {
+				return proxyUrl, nil
+			}
+			return nil, nil
+		}
 	}
 	this.ProxyHttpServer.Tr = t
 	return nil

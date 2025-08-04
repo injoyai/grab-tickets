@@ -11,6 +11,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 )
 
 type ReqAction struct {
@@ -112,6 +113,9 @@ func (this *ReqAction) ResponseGif(body []byte) *ReqAction {
 
 
 
+
+
+
  */
 
 type RespAction struct {
@@ -202,12 +206,26 @@ func (this *RespAction) Print(body ...bool) *RespAction {
 
 func (this *RespAction) ReplaceBody(old, new string) *RespAction {
 	return this.Do(func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
-		resp2, err := RespReplaceBody(resp, old, new)
-		if err != nil {
-			this.log.Printf("[错误] %v\n", err)
+		if resp == nil || resp.Body == nil {
 			return resp
 		}
-		return resp2
+
+		// 读取原始响应体body
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return resp
+		}
+		resp.Body.Close()
+
+		// 替换内容
+		modified := strings.ReplaceAll(string(bodyBytes), old, new)
+
+		// 设置新的响应体body
+		resp.Body = io.NopCloser(strings.NewReader(modified))
+		resp.ContentLength = int64(len(modified))
+		resp.Header.Set("Content-Length", fmt.Sprintf("%d", len(modified)))
+
+		return resp
 	})
 }
 
