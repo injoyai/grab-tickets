@@ -14,6 +14,12 @@ import (
 	"strings"
 )
 
+type (
+	ReqHandler = func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response)
+
+	RespHandler = func(resp *http.Response, ctx *goproxy.ProxyCtx) *http.Response
+)
+
 type ReqAction struct {
 	*goproxy.ReqProxyConds
 	log *logs.Entity

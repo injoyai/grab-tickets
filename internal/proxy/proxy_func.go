@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+type Condition = goproxy.RespCondition
+
 func DomainIs(domain ...string) Condition {
 	return goproxy.ReqConditionFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		for _, d := range domain {

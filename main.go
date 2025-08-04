@@ -17,7 +17,7 @@ func main() {
 	//s.Verbose = true
 
 	s.OnResponse(
-		//proxy.HostLike("(.*)\\.damai\\.cn"),
+	//proxy.HostLike("(.*)\\.damai\\.cn"),
 	).PrintHost() //.Print()
 
 	s.Run(context.Background())
